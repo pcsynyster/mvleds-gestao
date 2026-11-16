@@ -2,11 +2,6 @@ const Estoque = (() => {
   const { $, esc, moeda, numero, decimalBR, diaISO, diaRelativo, dataCurta, horaDe, normalizar } = U;
   const I = UI.ICONES;
 
-  const SITE = {
-    url: "https://imckuxdiatyxbbibhncc.supabase.co",
-    chave: "sb_publishable_ZmGpXvye-RPkxU8fUGztuw_xZQaRNH5",
-  };
-
   const estado = { aba: "itens", busca: "", filtro: "todos", filtroMov: "todos" };
 
   const nomeCategoria = (k) => (DB.CATEGORIAS.find((c) => c.key === k) || { label: "Outros" }).label;
@@ -37,9 +32,8 @@ const Estoque = (() => {
     if (!todos.length) {
       alvo.innerHTML = UI.vazioHtml(
         "Nenhum item no estoque",
-        "Puxe os produtos do site da loja ou cadastre o primeiro item.",
-        `<div class="botoes"><button type="button" class="btn btn--primario" data-acao="importar">Puxar do site</button>
-         <button type="button" class="btn btn--secundario" data-acao="novo">Cadastrar item</button></div>`
+        "Cadastre o primeiro item com a quantidade que tem na loja.",
+        `<div class="botoes"><button type="button" class="btn btn--primario" data-acao="novo">Cadastrar item</button></div>`
       );
       return;
     }
@@ -464,50 +458,6 @@ const Estoque = (() => {
     });
   }
 
-  /* Importar do site */
-  async function importarDoSite() {
-    const ok = await UI.confirmar(
-      "Puxar produtos do site?",
-      "Os produtos da vitrine viram itens do estoque, com quantidade zero. Itens que já foram puxados antes não se repetem.",
-      "Puxar produtos",
-      false
-    );
-    if (!ok) return;
-    UI.toast("Buscando produtos do site…");
-    try {
-      const r = await fetch(`${SITE.url}/rest/v1/produtos?select=id,name,category,price,variants&order=position.asc`, {
-        headers: { apikey: SITE.chave },
-      });
-      if (!r.ok) throw new Error("http " + r.status);
-      const produtos = await r.json();
-      const origens = new Set(DB.itens().map((i) => i.origem).filter(Boolean));
-      let novos = 0;
-      produtos
-        .filter((p) => p.category !== "servicos")
-        .forEach((p) => {
-          const variantes = Array.isArray(p.variants) && p.variants.length ? p.variants : [{ id: "", label: "", price: p.price }];
-          variantes.forEach((v) => {
-            const origem = `site:${p.id}:${v.id || ""}`;
-            if (origens.has(origem)) return;
-            DB.salvarItem({
-              nome: String(p.name).slice(0, 80),
-              modelo: String(v.label || "").slice(0, 40),
-              categoria: DB.CATEGORIAS.some((c) => c.key === p.category) ? p.category : "outro",
-              preco: Number(v.price) || 0,
-              qtd: 0,
-              origem,
-            });
-            novos++;
-          });
-        });
-      UI.toast(novos ? `${novos} itens puxados. Agora informe a quantidade de cada um.` : "Todos os produtos do site já estão no estoque.");
-      App.irPara("estoque");
-      mostrarAba("itens");
-    } catch {
-      UI.toast("Não deu pra buscar os produtos. Confira a internet e tente de novo.", true);
-    }
-  }
-
   function iniciar() {
     const raiz = $("view-estoque");
     raiz.addEventListener("click", (e) => {
@@ -526,7 +476,6 @@ const Estoque = (() => {
       if (b.dataset.mov) return verMov(b.dataset.mov);
       const a = b.dataset.acao;
       if (a === "novo") abrirItem(null);
-      if (a === "importar") importarDoSite();
       if (a === "venda" || a === "entrada" || a === "perda") novaMov(a);
     });
     raiz.addEventListener("input", (e) => {
@@ -540,5 +489,5 @@ const Estoque = (() => {
     });
   }
 
-  return { render, iniciar, abrirItem, novaMov, verMov, linhaMov, mostrarAba, importarDoSite, nomeItem, nomeCategoria };
+  return { render, iniciar, abrirItem, novaMov, verMov, linhaMov, mostrarAba, nomeItem, nomeCategoria };
 })();

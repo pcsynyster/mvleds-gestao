@@ -39,10 +39,9 @@ const Inicio = (() => {
         semItens
           ? `<section class="cartao cartao--boas-vindas">
               <h2>Comece pelo estoque</h2>
-              <p>Puxe os produtos que já estão no site da loja ou cadastre os itens um por um. Depois é só informar a quantidade de cada um.</p>
+              <p>Cadastre os itens que você tem na loja com a quantidade de cada um. A partir daí, cada venda e cada entrada atualizam o estoque sozinhas.</p>
               <div class="botoes">
-                <button type="button" class="btn btn--primario" data-acao="importar">Puxar produtos do site</button>
-                <button type="button" class="btn btn--secundario" data-acao="item">Cadastrar item</button>
+                <button type="button" class="btn btn--primario" data-acao="item">Cadastrar primeiro item</button>
               </div>
             </section>`
           : ""
@@ -142,7 +141,6 @@ const Inicio = (() => {
         entrada: () => Estoque.novaMov("entrada"),
         compromisso: () => Agenda.abrirEvento(null, diaISO()),
         item: () => Estoque.abrirItem(null),
-        importar: Estoque.importarDoSite,
         reposicao: () => {
           App.irPara("mandar");
           Mandar.reposicao();
